@@ -1,3 +1,9 @@
+// file: components/home/sections/HeroSection.tsx
+"use client";
+
+import Link from "next/link";
+import { buildCtaHref } from "@/lib/cta";
+
 type HeroSectionProps = {
   form: {
     name: string;
@@ -21,8 +27,30 @@ export default function HeroSection({
   setForm,
   onSubmit,
 }: HeroSectionProps) {
+  function handleHeroFormSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const href = buildCtaHref({
+      intent: "hearing-test",
+      sourcePage: "homepage",
+      cta: "hero-form",
+      referrerSection: form.city ? `hero-${form.city.toLowerCase()}` : "hero",
+    });
+
+    window.location.href = href;
+  }
+
+  const heroPrimaryHref = buildCtaHref({
+    intent: "hearing-test",
+    sourcePage: "homepage",
+    cta: "hero-primary",
+    referrerSection: "hero",
+  });
+
   return (
     <section className="hero-split">
+      <div className="hero-bg-fallback" />
+
       <video
         className="hero-video"
         autoPlay
@@ -40,7 +68,9 @@ export default function HeroSection({
       <div className="container hero-split-shell">
         <div className="hero-split-grid">
           <div className="hero-content fade-up">
-            <div className="hero-kicker">Trusted hearing care for Indian families</div>
+            <div className="hero-kicker">
+              Trusted hearing care for Indian families
+            </div>
 
             <h1 className="hero-heading">
               When conversations start
@@ -49,9 +79,9 @@ export default function HeroSection({
             </h1>
 
             <p className="hero-lead">
-              If voices feel unclear, TV volume keeps rising, or someone you love has
-              started withdrawing from conversations, a hearing test can help you
-              understand what is happening.
+              If voices feel unclear, TV volume keeps rising, or someone you love
+              has started withdrawing from conversations, a hearing test can help
+              you understand what is happening.
             </p>
 
             <p className="hero-subcopy">
@@ -59,9 +89,9 @@ export default function HeroSection({
             </p>
 
             <div className="hero-cta-row">
-              <a className="btn btn-primary" href="/book-hearing-test">
+              <Link className="btn btn-primary" href={heroPrimaryHref}>
                 Book My Hearing Test
-              </a>
+              </Link>
 
               <a className="btn hero-secondary-btn" href="#how-it-works">
                 How It Works
@@ -74,12 +104,12 @@ export default function HeroSection({
               <div className="hero-form-card-top">
                 <h2 className="hero-form-heading">Get Consultation</h2>
                 <p className="hero-form-text">
-                  It takes less than 30 seconds. Our team will call to confirm your
-                  nearest clinic and preferred time.
+                  It takes less than 30 seconds. Our team will call to confirm
+                  your nearest clinic and preferred time.
                 </p>
               </div>
 
-              <form onSubmit={onSubmit} className="hero-inline-form">
+              <form onSubmit={handleHeroFormSubmit} className="hero-inline-form">
                 <div className="hero-form-stack">
                   <input
                     className="hero-clean-input"
@@ -87,7 +117,10 @@ export default function HeroSection({
                     placeholder="Your Name"
                     value={form.name}
                     onChange={(e) =>
-                      setForm((current) => ({ ...current, name: e.target.value }))
+                      setForm((current) => ({
+                        ...current,
+                        name: e.target.value,
+                      }))
                     }
                   />
 
@@ -95,7 +128,10 @@ export default function HeroSection({
                     className="hero-clean-input hero-clean-select"
                     value={form.city}
                     onChange={(e) =>
-                      setForm((current) => ({ ...current, city: e.target.value }))
+                      setForm((current) => ({
+                        ...current,
+                        city: e.target.value,
+                      }))
                     }
                   >
                     <option value="">Select City</option>
@@ -114,7 +150,10 @@ export default function HeroSection({
                     placeholder="Phone Number"
                     value={form.phone}
                     onChange={(e) =>
-                      setForm((current) => ({ ...current, phone: e.target.value }))
+                      setForm((current) => ({
+                        ...current,
+                        phone: e.target.value,
+                      }))
                     }
                   />
 

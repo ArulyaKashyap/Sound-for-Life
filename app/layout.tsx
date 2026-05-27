@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+// app/layout.tsx
 import "./globals.css";
+import type { Metadata } from "next";
 import GlobalTopBar from "../components/GlobalTopBar";
 import MainHeader from "../components/MainHeader";
 import Footer from "../components/Footer";

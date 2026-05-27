@@ -1,9 +1,11 @@
-// app/page.tsx
+// FILE: app/page.tsx
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { buildCtaHref } from "@/lib/cta";
 import HeroSection from "../components/home/sections/HeroSection";
-import TrustStrip from "../components/home/sections/TrustStrip";
 import JourneySection from "../components/home/sections/JourneySection";
 import HowItWorksSection from "../components/home/sections/HowItWorksSection";
 import ClinicsSection from "../components/home/sections/ClinicsSection";
@@ -11,12 +13,14 @@ import BrandsSection from "../components/home/sections/BrandsSection";
 import ReviewsSection from "../components/home/sections/ReviewsSection";
 import FAQSection from "../components/home/sections/FAQSection";
 import Footer from "@/components/Footer";
+
 type JourneyCard = {
   title: string;
   subtitle: string;
   copy: string;
   cta: string;
   href: string;
+  icon: string;
 };
 
 type Step = {
@@ -49,6 +53,7 @@ type Clinic = {
   city: string;
   locality: string;
   address: string;
+  slug: string;
 };
 
 type FAQ = {
@@ -56,54 +61,61 @@ type FAQ = {
   answer: string;
 };
 
+type TrustStat = {
+  value: string;
+  label: string;
+  sublabel: string;
+  icon: "location" | "audiologists" | "brands" | "trial" | "support";
+};
+
 const journeyCards: JourneyCard[] = [
   {
-    title: "Hearing Loss",
+    title: "🦻 Hearing Loss",
     subtitle: "Understand common hearing problems and what to do next.",
-    copy:
-      "When hearing feels unclear, start with a hearing test. A certified audiologist will help you understand what is happening and what to do next.",
+    copy: "When hearing feels unclear, start with a hearing test. A certified audiologist will help you understand what is happening and what to do next.",
     cta: "Check Hearing Loss Signs →",
     href: "/hearing-loss",
+    icon: ""
   },
   {
-    title: "Hearing Aids",
+    title: " 🦻Hearing Aids",
     subtitle: "Explore types, brands, comparisons, and first-time guidance.",
-    copy:
-      "Compare hearing aid options across comfort, style, features, and suitability with audiologist-led support before you decide.",
+    copy: "Compare hearing aid options across comfort, style, features, and suitability with audiologist-led support before you decide.",
     cta: "Explore Hearing Aids →",
     href: "/hearing-aids",
+    icon: ""
   },
   {
-    title: "Services",
+    title: "🛠️ Services",
     subtitle: "Book tests, fitting, repair, and aftercare support.",
-    copy:
-      "Whether you need a hearing test, device support, or guidance after fitting, we help you reach the right service quickly.",
+    copy: "Whether you need a hearing test, device support, or guidance after fitting, we help you reach the right service quickly.",
     cta: "View Our Services →",
     href: "/services",
+    icon: ""
   },
   {
-    title: "Clinics",
+    title: "📍 Clinics",
     subtitle: "Find expert hearing care near your home, office, or family.",
-    copy:
-      "Search clinics by city and locality if you are looking for a hearing clinic near me, hearing aid centre near me, or audiologist support close by.",
+    copy: "Search clinics by city and locality if you are looking for a hearing clinic near me, hearing aid centre near me, or audiologist support close by.",
     cta: "Find My Nearest Clinic →",
     href: "/clinics",
+    icon: ""
   },
   {
-    title: "Stories & Education",
+    title: "📚 Stories & Education",
     subtitle: "Read stories, testimonials, blogs, FAQs, and hearing resources.",
-    copy:
-      "Explore practical education, patient journeys, clinic stories, and FAQs designed to make hearing care feel clearer and less intimidating.",
+    copy: "Explore practical education, patient journeys, clinic stories, and FAQs designed to make hearing care feel clearer and less intimidating.",
     cta: "Explore Stories & Education →",
     href: "/stories",
+    icon: ""
   },
   {
-    title: "About Us",
+    title: "👋 About Us",
     subtitle: "Learn how Sound for Life approaches hearing care in India.",
-    copy:
-      "Understand our audiologist-led model, multi-brand support, hearing care process, helpful guides, and long-term aftercare philosophy.",
+    copy: "Understand our audiologist-led model, multi-brand support, hearing care process, helpful guides, and long-term aftercare philosophy.",
     cta: "Learn About SFL →",
     href: "/about",
+    icon: ""
   },
 ];
 
@@ -129,9 +141,6 @@ const brands: Brand[] = [
   { name: "Signia", models: "Silk, Pure, Motion, Insio" },
   { name: "Phonak", models: "Audeo, Virto, Naida, Paradise" },
   { name: "ReSound", models: "Nexia, Omnia, Key, Enzo, Magna" },
-  { name: "Unitron", models: "Moxi, Insera, Stride, Vivante" },
-  { name: "Sonic", models: "Radiant, Enchant, Cheer, Journey" },
-  { name: "A&M", models: "XTM, XTM P, XTM M, BTE Range" },
 ];
 
 const whyChoose = [
@@ -214,59 +223,69 @@ const clinics: Clinic[] = [
     locality: "Greater Kailash",
     address:
       "M-2, Main Road, LGF, Greater Kailash Part-1, Near SCI Hospital, New Delhi-110048",
+    slug: "delhi-greater-kailash",
   },
   {
     city: "Delhi",
     locality: "Janakpuri",
     address:
       "B-50, New Krishna Park, Dhauli Pyau Red Light Crossing, Service Lane, Near Raymond, Janakpuri, New Delhi-110018",
+    slug: "delhi-janakpuri",
   },
   {
     city: "Delhi",
     locality: "Mayur Vihar",
     address:
       "Shop No. 4, Pocket 1, DDA Market, Near the BSES Office, Mayur Vihar Phase 1, New Delhi - 110091",
+    slug: "delhi-mayur-vihar",
   },
   {
     city: "Noida",
     locality: "Sector 22",
     address: "H-15, Sector-22, Noida-201301",
+    slug: "noida-sector-22",
   },
   {
     city: "Noida",
     locality: "Sector 3",
     address:
       "2nd Floor, G 43, Block G, Noida Sector 3, Noida, Uttar Pradesh 201301",
+    slug: "noida-sector-3",
   },
   {
     city: "Gurugram",
     locality: "M.G. Road",
     address:
       "S-056, Sahara Mall, Ground Floor, Near MG Road Metro Station, Gurgaon, Haryana-122001",
+    slug: "gurugram-mg-road",
   },
   {
     city: "Faridabad",
     locality: "Sector 16",
     address:
       "Booth No. 110, Main Market, Sector 16, Near ICICI Bank, Faridabad, Haryana-121007",
+    slug: "faridabad-sector-16",
   },
   {
     city: "Lucknow",
     locality: "Gomti Nagar",
     address:
       "Sahara Plaza, Gate No. 3, Shop No. D-218, Patrakarpuram Chauraha, Gomti Nagar, Lucknow, UP-226010",
+    slug: "lucknow-gomti-nagar",
   },
   {
     city: "Mumbai",
     locality: "Andheri",
     address:
       "D10/E6, Minoo Minar CHS, Veera Desai Road, Next to Courtyard Restaurant, Andheri West, Mumbai, Maharashtra-400053",
+    slug: "mumbai-andheri",
   },
   {
     city: "Bengaluru",
     locality: "Jayanagar",
     address:
       "House No. 93, 7th Main Road, 30th Cross, Jayanagar 4th Block, Opposite Maiyas Restaurant, Bengaluru-560011",
+    slug: "bengaluru-jayanagar",
   },
 ];
 
@@ -296,6 +315,31 @@ const faqs: FAQ[] = [
     answer:
       "Pricing varies based on brand, style, technology level, and features. We first understand hearing needs and then help compare suitable options.",
   },
+  {
+    question: "What should I expect during my first hearing test appointment?",
+    answer:
+      "Your first visit usually includes a discussion about your hearing concerns, a hearing history review, basic testing, and a simple explanation of the result and next step.",
+  },
+  {
+    question: "Do you accept insurance or provide financing options for hearing aids?",
+    answer:
+      "Coverage and payment support can vary. Please speak with the clinic team to understand available payment options, financing support, or any relevant claim guidance.",
+  },
+  {
+    question: "How do I know if I need a hearing aid or just a simple cleaning?",
+    answer:
+      "That depends on the cause of the problem. Weak hearing, blocked ears, wax build-up, or device issues can feel similar, so a proper check is the best way to know the right next step.",
+  },
+  {
+    question: "Do you offer trial periods or warranties for hearing devices?",
+    answer:
+      "Trial and warranty support may be available depending on the hearing aid brand, model, and clinic process. The team can explain what applies before you decide.",
+  },
+  {
+    question: "How often should I have my hearing checked or my hearing aids serviced?",
+    answer:
+      "It depends on your hearing profile and device use, but regular reviews are helpful. Many people benefit from periodic hearing checks and routine device cleaning, adjustment, or servicing.",
+  },
 ];
 
 const notifications = [
@@ -307,12 +351,37 @@ const notifications = [
   "Suresh N. from Mumbai purchased a ReSound hearing aid this week",
 ];
 
-const trustItems = [
-  "Clinics Across India",
-  "Certified Audiologists",
-  "Multi-Brand Hearing Aids",
-  "Trial Before Purchase",
-  "Aftercare Support",
+const trustStats: TrustStat[] = [
+  {
+    value: "37+",
+    label: "Clinics PAN India",
+    sublabel: "Across multiple cities",
+    icon: "location",
+  },
+  {
+    value: "100+",
+    label: "Certified Audiologists",
+    sublabel: "Expert hearing guidance",
+    icon: "audiologists",
+  },
+  {
+    value: "7+",
+    label: "Premium Brands",
+    sublabel: "Multi-brand comparison",
+    icon: "brands",
+  },
+  {
+    value: "",
+    label: "Trial & Consultation",
+    sublabel: "Try before you decide",
+    icon: "trial",
+  },
+  {
+    value: "Lifetime",
+    label: "Aftercare Support",
+    sublabel: "Long-term follow-up help",
+    icon: "support",
+  },
 ];
 
 const cityPills = [
@@ -352,27 +421,6 @@ function getBrandTone(name: string) {
       note: "Often preferred for connected hearing experiences and modern technology support.",
       href: "/hearing-aids/brands/resound",
     },
-    Unitron: {
-      accent: "#F59E0B",
-      soft: "linear-gradient(180deg, #fff8e8 0%, #ffffff 100%)",
-      mark: "UN",
-      note: "A practical choice for flexible fitting support and day-to-day usability.",
-      href: "/hearing-aids/brands/unitron",
-    },
-    Sonic: {
-      accent: "#2563EB",
-      soft: "linear-gradient(180deg, #eef4ff 0%, #ffffff 100%)",
-      mark: "SO",
-      note: "Designed around comfort-focused hearing support and easier adaptation.",
-      href: "/hearing-aids/brands/sonic",
-    },
-    "A&M": {
-      accent: "#0F766E",
-      soft: "linear-gradient(180deg, #ecfdfa 0%, #ffffff 100%)",
-      mark: "AM",
-      note: "A straightforward option for dependable hearing support and essential features.",
-      href: "/hearing-aids/brands/am",
-    },
   };
 
   return (
@@ -386,7 +434,71 @@ function getBrandTone(name: string) {
   );
 }
 
+function TrustMetricIcon({ icon }: { icon: TrustStat["icon"] }) {
+  const commonProps = {
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2.2",
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+
+  switch (icon) {
+    case "location":
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            {...commonProps}
+            d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z"
+          />
+          <circle {...commonProps} cx="12" cy="10" r="2.8" />
+        </svg>
+      );
+    case "audiologists":
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            {...commonProps}
+            d="M16.5 20v-1.5A3.5 3.5 0 0 0 13 15h-2a3.5 3.5 0 0 0-3.5 3.5V20"
+          />
+          <circle {...commonProps} cx="12" cy="8" r="3" />
+          <path {...commonProps} d="M19 20v-1a2.8 2.8 0 0 0-2.2-2.7" />
+          <path {...commonProps} d="M17 5.5A2.8 2.8 0 0 1 17 11" />
+        </svg>
+      );
+    case "brands":
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            {...commonProps}
+            d="M12 3l6 2.5V11c0 4.2-2.6 7.9-6 10-3.4-2.1-6-5.8-6-10V5.5L12 3Z"
+          />
+          <path {...commonProps} d="M9.5 11.8l1.6 1.6 3.4-3.7" />
+        </svg>
+      );
+    case "trial":
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            {...commonProps}
+            d="M12 21s7-4.2 7-10.5V5.8L12 3 5 5.8v4.7C5 16.8 12 21 12 21Z"
+          />
+        </svg>
+      );
+    case "support":
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle {...commonProps} cx="12" cy="12" r="8.5" />
+          <path {...commonProps} d="m8.7 12.2 2.1 2.1 4.7-5" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
 export default function Home() {
+  const router = useRouter();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState(notifications[0]);
@@ -410,7 +522,8 @@ export default function Home() {
     let cycleTimeout: ReturnType<typeof setTimeout>;
 
     const showNextToast = () => {
-      const next = notifications[Math.floor(Math.random() * notifications.length)];
+      const next =
+        notifications[Math.floor(Math.random() * notifications.length)];
       setToastMessage(next);
       setToastVisible(true);
 
@@ -441,31 +554,38 @@ export default function Home() {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    console.log("Hearing consultation request:", form);
+
+    router.push(
+      buildCtaHref({
+        intent: "hearing-test",
+        sourcePage: "homepage",
+        cta: "hero-form",
+        referrerSection: "hero",
+      })
+    );
   }
 
   return (
     <>
       <style>{`
         :root {
-          --navy: #0D3B7D;
-          --blue: #0A5CAE;
+          --navy: #0d3b7d;
+          --blue: #0a5cae;
           --blue-2: #1267b9;
-          --blue-tint: #E8F4FD;
-          --orange: #F4831F;
+          --blue-tint: #e8f4fd;
+          --orange: #f4831f;
           --orange-deep: #df7417;
-          --amber: #FFCA28;
-          --white: #FFFFFF;
-          --grey-light: #F6F8FB;
+          --amber: #ffca28;
+          --white: #ffffff;
+          --grey-light: #f6f8fb;
           --grey-soft: #edf3f9;
-          --black: #222222;
           --text: #263445;
           --text-soft: #5d6d80;
-          --line: rgba(13,59,125,0.10);
-          --line-soft: rgba(13,59,125,0.06);
-          --shadow-soft: 0 16px 40px rgba(13,59,125,0.08);
-          --shadow-card: 0 18px 42px rgba(13,59,125,0.10);
-          --shadow-premium: 0 30px 80px rgba(13,59,125,0.16);
+          --line: rgba(13, 59, 125, 0.1);
+          --line-soft: rgba(13, 59, 125, 0.06);
+          --shadow-soft: 0 16px 40px rgba(13, 59, 125, 0.08);
+          --shadow-card: 0 18px 42px rgba(13, 59, 125, 0.1);
+          --shadow-premium: 0 30px 80px rgba(13, 59, 125, 0.16);
           --radius-xl: 30px;
           --radius-lg: 24px;
           --radius-md: 18px;
@@ -475,16 +595,14 @@ export default function Home() {
 
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; overflow-x: hidden; scroll-behavior: smooth; }
+
         body {
           background:
-            radial-gradient(circle at top left, rgba(232,244,253,0.42), transparent 28%),
+            radial-gradient(circle at top left, rgba(232, 244, 253, 0.42), transparent 28%),
             linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
           color: var(--text);
           font-family: Arial, sans-serif;
         }
-
-        
-}
 
         a { color: inherit; text-decoration: none; }
         button, input, select { font: inherit; }
@@ -498,8 +616,8 @@ export default function Home() {
         }
 
         .home-main {
-  padding-top: 126px;
-}
+          padding-top: 126px;
+        }
 
         .section {
           position: relative;
@@ -514,8 +632,8 @@ export default function Home() {
           height: 88px;
           pointer-events: none;
           background:
-            linear-gradient(to bottom, rgba(232,244,253,0.28), rgba(232,244,253,0)),
-            radial-gradient(85% 64% at 50% 0%, rgba(13,59,125,0.05), rgba(13,59,125,0));
+            linear-gradient(to bottom, rgba(232, 244, 253, 0.28), rgba(232, 244, 253, 0)),
+            radial-gradient(85% 64% at 50% 0%, rgba(13, 59, 125, 0.05), rgba(13, 59, 125, 0));
         }
 
         .fade-up {
@@ -549,7 +667,7 @@ export default function Home() {
           height: 4px;
           margin-top: 18px;
           border-radius: 999px;
-          background: linear-gradient(90deg, var(--orange), rgba(244,131,31,0.12));
+          background: linear-gradient(90deg, var(--orange), rgba(244, 131, 31, 0.12));
         }
 
         .section-title {
@@ -567,7 +685,7 @@ export default function Home() {
           border-radius: 22px;
           background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(246,250,254,0.94));
           border: 1px solid var(--line-soft);
-          box-shadow: 0 12px 30px rgba(13,59,125,0.05);
+          box-shadow: 0 12px 30px rgba(13, 59, 125, 0.05);
         }
 
         .section-intro {
@@ -579,59 +697,15 @@ export default function Home() {
         }
 
         .topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1100;
-  background: linear-gradient(90deg, var(--navy), #0b4f9f);
-  color: var(--white);
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-}
-
-.topbar-inner {
-  min-height: 44px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 8px 0;
-  font-size: 12px;
-}
-
-.topbar-cta {
-  padding: 9px 14px;
-  border-radius: 999px;
-  background: var(--orange);
-  color: var(--white);
-  font-weight: 800;
-  box-shadow: 0 12px 24px rgba(244,131,31,0.22);
-}
-
-body > header.sfl-header-wrap {
-  top: 44px;
-  z-index: 1090;
-}
-
-.home-main {
-  padding-top: 126px;
-}
-
-@media (max-width: 767px) {
-  .topbar-inner {
-    min-height: 52px;
-    padding: 10px 0;
-  }
-
-  body > header.sfl-header-wrap {
-    top: 52px;
-  }
-
-  .home-main {
-    padding-top: 126px;
-  }
-}
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 1100;
+          background: linear-gradient(90deg, var(--navy), #0b4f9f);
+          color: var(--white);
+          border-bottom: 1px solid rgba(255,255,255,0.10);
+        }
 
         .topbar-inner {
           min-height: 44px;
@@ -650,18 +724,19 @@ body > header.sfl-header-wrap {
           background: var(--orange);
           color: var(--white);
           font-weight: 800;
-          box-shadow: 0 12px 24px rgba(244,131,31,0.22);
+          box-shadow: 0 12px 24px rgba(244, 131, 31, 0.22);
           transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
         }
 
         .topbar-cta:hover {
           transform: translateY(-2px) scale(1.02);
-          box-shadow: 0 18px 28px rgba(244,131,31,0.28);
+          box-shadow: 0 18px 28px rgba(244, 131, 31, 0.28);
           background: var(--orange-deep);
         }
 
-        .hero-cta-row {
-          display: none;
+        body > header.sfl-header-wrap {
+          top: 44px;
+          z-index: 1090;
         }
 
         .hero-split {
@@ -670,7 +745,7 @@ body > header.sfl-header-wrap {
           min-height: 760px;
           display: flex;
           align-items: center;
-          background: #dfe9f2;
+          background: #eaf2f8;
         }
 
         .hero-video {
@@ -685,7 +760,12 @@ body > header.sfl-header-wrap {
           position: absolute;
           inset: 0;
           background:
-            linear-gradient(90deg, rgba(242,247,252,0.93) 0%, rgba(242,247,252,0.88) 40%, rgba(242,247,252,0.82) 100%);
+            linear-gradient(
+              90deg,
+              rgba(242,247,252,0.95) 0%,
+              rgba(242,247,252,0.90) 40%,
+              rgba(242,247,252,0.78) 100%
+            );
         }
 
         .hero-noise {
@@ -703,8 +783,8 @@ body > header.sfl-header-wrap {
           position: relative;
           z-index: 2;
           width: 100%;
-          padding-top: 48px;
-          padding-bottom: 48px;
+          padding-top: 56px;
+          padding-bottom: 56px;
         }
 
         .hero-split-grid {
@@ -764,52 +844,9 @@ body > header.sfl-header-wrap {
 
         .hero-cta-row {
           margin-top: 32px;
-          display: none;
+          display: flex;
           gap: 14px;
           flex-wrap: wrap;
-        }
-
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 52px;
-          padding: 14px 22px;
-          border-radius: 999px;
-          font-weight: 800;
-          transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease, color 150ms ease, border-color 150ms ease;
-        }
-
-        .btn:hover {
-          transform: translateY(-2px);
-        }
-
-        .btn-primary {
-          background: linear-gradient(180deg, #f89a3f 0%, var(--orange) 100%);
-          color: var(--white);
-          box-shadow: 0 14px 28px rgba(244,131,31,0.24);
-        }
-
-        .btn-primary:hover {
-          background: linear-gradient(180deg, #f48b34 0%, var(--orange-deep) 100%);
-        }
-
-        .btn-secondary {
-          background: rgba(255,255,255,0.98);
-          color: var(--navy);
-          border: 1px solid rgba(13,59,125,0.18);
-          box-shadow: 0 10px 22px rgba(13,59,125,0.06);
-        }
-
-        .btn-secondary:hover {
-          border-color: rgba(13,59,125,0.24);
-          color: var(--blue);
-        }
-
-        .btn-ghost {
-          background: rgba(255,255,255,0.08);
-          color: var(--white);
-          border: 1px solid rgba(255,255,255,0.28);
         }
 
         .hero-secondary-btn {
@@ -831,7 +868,7 @@ body > header.sfl-header-wrap {
         .hero-form-card {
           width: 100%;
           max-width: 620px;
-          background: rgba(255,255,255,0.94);
+          background: rgba(255,255,255,0.96);
           border: 1px solid rgba(13,59,125,0.08);
           border-radius: 28px;
           padding: 34px;
@@ -916,12 +953,48 @@ body > header.sfl-header-wrap {
           line-height: 1.6;
         }
 
+        .hero-photo-band {
+          padding: 18px 0 0;
+          background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+        }
+
+        .hero-photo-full {
+          position: relative;
+          width: 100vw;
+          margin-left: calc(50% - 50vw);
+          margin-right: calc(50% - 50vw);
+          overflow: hidden;
+          background: #dbe8f3;
+          border-top: 1px solid rgba(13, 59, 125, 0.06);
+          border-bottom: 1px solid rgba(13, 59, 125, 0.06);
+          box-shadow: var(--shadow-soft);
+        }
+
+        .hero-photo-wrap {
+          position: relative;
+          width: 100%;
+          height: min(42vw, 520px);
+          min-height: 260px;
+        }
+
+        .hero-photo-image {
+          object-fit: cover;
+          object-position: center;
+        }
+
+        .hero-photo-overlay {
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(180deg, rgba(13, 59, 125, 0.04) 0%, rgba(13, 59, 125, 0.12) 100%);
+          pointer-events: none;
+        }
+
         .trust-strip,
         .how-section,
         .clinic-section,
         .why-section,
-        .faq-section,
-        .final-cta {
+        .faq-section {
           position: relative;
           overflow: hidden;
         }
@@ -941,8 +1014,7 @@ body > header.sfl-header-wrap {
           pointer-events: none;
         }
 
-        .how-section::before,
-        .final-cta::before {
+        .how-section::before {
           content: "";
           position: absolute;
           top: -60px;
@@ -955,16 +1027,77 @@ body > header.sfl-header-wrap {
         }
 
         .trust-strip {
-          padding: 28px 0;
-          background: linear-gradient(180deg, #f3f9fe 0%, #ffffff 100%);
-          border-top: 1px solid var(--line-soft);
-          border-bottom: 1px solid var(--line-soft);
+          padding: 0;
+          background:
+            radial-gradient(circle at top left, rgba(255,255,255,0.08), transparent 24%),
+            linear-gradient(180deg, #0b3773 0%, #082e63 100%);
+          color: var(--white);
+          border-top: 1px solid rgba(255,255,255,0.06);
+          border-bottom: 1px solid rgba(255,255,255,0.06);
         }
 
         .trust-grid {
           display: grid;
           grid-template-columns: repeat(5, minmax(0, 1fr));
-          gap: 14px;
+          gap: 0;
+        }
+
+        .trust-item {
+          padding: 32px 20px 30px;
+          text-align: center;
+          border-right: 1px solid rgba(255,255,255,0.08);
+          transition: transform 180ms ease, background 180ms ease;
+        }
+
+        .trust-item:last-child {
+          border-right: 0;
+        }
+
+        .trust-item:hover {
+          transform: translateY(-2px);
+          background: rgba(255,255,255,0.04);
+        }
+
+        .trust-icon-shell {
+          width: 60px;
+          height: 60px;
+          margin: 0 auto 16px;
+          border-radius: 999px;
+          display: grid;
+          place-items: center;
+          color: var(--white);
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.14);
+        }
+
+        .trust-icon-shell svg {
+          width: 28px;
+          height: 28px;
+        }
+
+        .trust-value {
+          display: block;
+          color: var(--white);
+          font-size: 30px;
+          line-height: 1.05;
+          font-weight: 900;
+          margin-bottom: 8px;
+        }
+
+        .trust-label {
+          display: block;
+          color: var(--white);
+          font-size: 18px;
+          line-height: 1.3;
+          font-weight: 800;
+        }
+
+        .trust-sublabel {
+          display: block;
+          margin-top: 6px;
+          color: rgba(255,255,255,0.78);
+          font-size: 13px;
+          line-height: 1.5;
         }
 
         .premium-grid-glow {
@@ -985,7 +1118,6 @@ body > header.sfl-header-wrap {
           z-index: 1;
         }
 
-        .trust-item,
         .journey-card,
         .step-card,
         .why-card,
@@ -995,26 +1127,6 @@ body > header.sfl-header-wrap {
         .faq-item {
           border-radius: var(--radius-lg);
           transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
-        }
-
-        .trust-item {
-          padding: 22px 18px;
-          background: rgba(255,255,255,0.90);
-          border: 1px solid var(--line);
-          box-shadow: 0 10px 24px rgba(13,59,125,0.05);
-        }
-
-        .trust-item:hover {
-          transform: translateY(-3px);
-          box-shadow: var(--shadow-soft);
-        }
-
-        .trust-item strong {
-          display: block;
-          color: var(--navy);
-          font-size: 15px;
-          line-height: 1.45;
-          text-align: center;
         }
 
         .journey-grid {
@@ -1161,8 +1273,7 @@ body > header.sfl-header-wrap {
         }
 
         .how-section .section-title,
-        .clinic-section .section-title,
-        .final-cta .section-title {
+        .clinic-section .section-title {
           color: var(--white);
         }
 
@@ -1574,28 +1685,27 @@ body > header.sfl-header-wrap {
         }
 
         .family-visual {
+          position: relative;
           min-height: 100%;
           height: 100%;
           border-radius: 30px;
-          background:
-            linear-gradient(145deg, rgba(244,131,31,0.12), rgba(232,244,253,0.9)),
-            linear-gradient(180deg, #fff7ef, #eef7fd);
+          overflow: hidden;
           border: 1px solid var(--line);
           box-shadow: var(--shadow-premium);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 36px;
-          text-align: center;
-          color: #5e6876;
-          line-height: 1.9;
-          transition: transform 220ms ease, box-shadow 220ms ease;
-          font-weight: 600;
+          background: #e8f1f8;
         }
 
-        .family-visual:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 30px 80px rgba(13,59,125,0.16);
+        .family-visual img {
+          object-fit: cover;
+          object-position: center;
+        }
+
+        .family-visual-overlay {
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(180deg, rgba(13,59,125,0.04), rgba(13,59,125,0.14));
+          pointer-events: none;
         }
 
         .outcome-box {
@@ -1676,6 +1786,11 @@ body > header.sfl-header-wrap {
           background: rgba(255,255,255,0.98);
           border: 1px solid rgba(255,255,255,0.12);
           box-shadow: var(--shadow-card);
+        }
+
+        .stories-section .story-card h3,
+        .stories-section .blog-card h3 {
+          color: var(--navy);
         }
 
         .stories-section .education-tag {
@@ -1767,13 +1882,11 @@ body > header.sfl-header-wrap {
           position: fixed;
           top: 50%;
           left: 24px;
-          bottom: auto;
           width: 360px;
           max-width: calc(100vw - 48px);
           padding: 18px 18px 18px 20px;
           border-radius: 18px;
-          background:
-            linear-gradient(135deg, rgba(13,59,125,0.98), rgba(244,131,31,0.96));
+          background: linear-gradient(135deg, rgba(13,59,125,0.98), rgba(244,131,31,0.96));
           color: var(--white);
           box-shadow: 0 24px 40px rgba(13,59,125,0.28);
           border: 1px solid rgba(255,255,255,0.12);
@@ -1865,6 +1978,43 @@ body > header.sfl-header-wrap {
           transform: translateY(0);
         }
 
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 52px;
+          padding: 14px 22px;
+          border-radius: 999px;
+          font-weight: 800;
+          transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+        }
+
+        .btn:hover {
+          transform: translateY(-2px);
+        }
+
+        .btn-primary {
+          background: linear-gradient(180deg, #f89a3f 0%, var(--orange) 100%);
+          color: var(--white);
+          box-shadow: 0 14px 28px rgba(244,131,31,0.24);
+        }
+
+        .btn-primary:hover {
+          background: linear-gradient(180deg, #f48b34 0%, var(--orange-deep) 100%);
+        }
+
+        .btn-secondary {
+          background: rgba(255,255,255,0.98);
+          color: var(--navy);
+          border: 1px solid rgba(13,59,125,0.18);
+          box-shadow: 0 10px 22px rgba(13,59,125,0.06);
+        }
+
+        .btn-secondary:hover {
+          border-color: rgba(13,59,125,0.24);
+          color: var(--blue);
+        }
+
         @media (max-width: 1220px) {
           .hero-split-grid,
           .why-grid {
@@ -1875,9 +2025,12 @@ body > header.sfl-header-wrap {
             justify-content: flex-start;
           }
 
-          .hero-heading,
-          .section-title {
+          .hero-heading {
             font-size: 48px;
+          }
+
+          .section-title {
+            font-size: 42px;
           }
 
           .trust-grid {
@@ -1888,9 +2041,12 @@ body > header.sfl-header-wrap {
           .stories-grid,
           .clinics-grid,
           .steps-grid,
-          .footer-grid,
           .brands-grid-premium {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .hero-photo-wrap {
+            height: 400px;
           }
 
           .family-visual {
@@ -1899,13 +2055,25 @@ body > header.sfl-header-wrap {
         }
 
         @media (max-width: 767px) {
-          .container { padding: 0 16px; }
-          .home-main { padding-top: 52px; }
-          .section, .hero-split { padding: 72px 0; }
+          .container {
+            padding: 0 16px;
+          }
+
+          .home-main {
+            padding-top: 126px;
+          }
+
+          .section {
+            padding: 72px 0;
+          }
 
           .topbar-inner {
             min-height: 52px;
             padding: 10px 0;
+          }
+
+          body > header.sfl-header-wrap {
+            top: 52px;
           }
 
           .hero-split {
@@ -1913,8 +2081,13 @@ body > header.sfl-header-wrap {
           }
 
           .hero-split-shell {
-            padding-top: 24px;
-            padding-bottom: 24px;
+            padding-top: 28px;
+            padding-bottom: 28px;
+          }
+
+          .hero-split-grid {
+            grid-template-columns: 1fr;
+            gap: 24px;
           }
 
           .hero-heading,
@@ -1923,26 +2096,13 @@ body > header.sfl-header-wrap {
           }
 
           .hero-lead,
-          .final-subtitle {
-            font-size: 18px;
-          }
-
-          .hero-split-grid,
-          .trust-grid,
-          .journey-grid,
-          .stories-grid,
-          .blogs-grid,
-          .clinics-grid,
-          .steps-grid,
-          .why-grid,
-          .why-cards,
-          .footer-grid,
-          .brands-grid-premium {
-            grid-template-columns: 1fr;
+          .hero-subcopy,
+          .hero-form-text {
+            font-size: 15px;
+            line-height: 1.7;
           }
 
           .hero-cta-row,
-          .clinic-actions,
           .section-actions-row,
           .brands-top-row,
           .sticky-cta-inner {
@@ -1952,15 +2112,46 @@ body > header.sfl-header-wrap {
 
           .hero-form-card {
             padding: 22px;
+            border-radius: 22px;
           }
 
-          .toast {
-            top: 50%;
-            left: 12px;
-            right: 12px;
-            width: auto;
-            bottom: auto;
-            max-width: none;
+          .hero-photo-band {
+            padding: 14px 0 0;
+          }
+
+          .hero-photo-wrap {
+            height: 230px;
+            min-height: 230px;
+          }
+
+          .trust-grid,
+          .journey-grid,
+          .stories-grid,
+          .blogs-grid,
+          .clinics-grid,
+          .steps-grid,
+          .why-grid,
+          .why-cards,
+          .brands-grid-premium {
+            grid-template-columns: 1fr;
+          }
+
+          .trust-item {
+            padding: 24px 18px;
+            border-right: 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+          }
+
+          .trust-item:last-child {
+            border-bottom: 0;
+          }
+
+          .trust-value {
+            font-size: 26px;
+          }
+
+          .trust-label {
+            font-size: 17px;
           }
 
           .section-soft-panel {
@@ -1980,39 +2171,85 @@ body > header.sfl-header-wrap {
           .family-visual {
             min-height: 300px;
           }
+
+          .toast {
+            top: 50%;
+            left: 12px;
+            right: 12px;
+            width: auto;
+            max-width: none;
+          }
         }
       `}</style>
 
       <main className="home-main">
         <div className="topbar">
-
-  <div className="container topbar-inner">
-
-    <div>Choose Your Nearest Clinic</div>
-
-    <div>Need help deciding? Call +919015401540 · Mon–Sat 10am–7pm</div>
-
-    <a className="topbar-cta" href="/book-hearing-test">
-
-      Book My Hearing Test →
-
-    </a>
-
-  </div>
-
-</div>
+          <div className="container topbar-inner">
+            <div>Choose Your Nearest Clinic</div>
+            <div>Need help deciding? Call +919015401540 · Mon–Sat 10am–7pm</div>
+            <a
+              className="topbar-cta"
+              href={buildCtaHref({
+                intent: "hearing-test",
+                sourcePage: "homepage",
+                cta: "topbar-book-hearing-test",
+                referrerSection: "topbar",
+              })}
+            >
+              Book My Hearing Test →
+            </a>
+          </div>
+        </div>
 
         <HeroSection form={form} setForm={setForm} onSubmit={handleSubmit} />
-        <TrustStrip items={trustItems} />
-        <JourneySection cards={journeyCards} />
-        <HowItWorksSection steps={steps} />
 
-        <ClinicsSection
-          cityFilter={cityFilter}
-          setCityFilter={setCityFilter}
-          cityPills={cityPills}
-          clinics={visibleClinics}
-        />
+        <section
+          className="hero-photo-band"
+          aria-label="Family hearing care image"
+        >
+          <div className="hero-photo-full">
+            <div className="hero-photo-wrap">
+              <Image
+                src="/images/home-hearing-family.jpeg"
+                alt="Indian family with senior hearing care support at Sound for Life"
+                fill
+                priority
+                className="hero-photo-image"
+              />
+              <div className="hero-photo-overlay" />
+            </div>
+          </div>
+        </section>
+
+        <section
+          className="trust-strip"
+          aria-label="Key Sound for Life highlights"
+        >
+          <div className="container">
+            <div className="trust-grid">
+              {trustStats.map((item) => (
+                <article key={item.label} className="trust-item">
+                  <div className="trust-icon-shell">
+                    <TrustMetricIcon icon={item.icon} />
+                  </div>
+                  <strong className="trust-value">{item.value}</strong>
+                  <span className="trust-label">{item.label}</span>
+                  <span className="trust-sublabel">{item.sublabel}</span>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <JourneySection cards={journeyCards} />
+<HowItWorksSection steps={steps} />
+
+<ClinicsSection
+  cityFilter={cityFilter}
+  setCityFilter={setCityFilter}
+  cityPills={cityPills}
+  clinics={visibleClinics}
+/>
 
         <BrandsSection brands={brands} getBrandTone={getBrandTone} />
 
@@ -2022,11 +2259,14 @@ body > header.sfl-header-wrap {
             <div>
               <div className="section-header-shell fade-up">
                 <h2 className="section-title">
-                  Why families choose Sound for Life when hearing becomes a daily concern
+                  Why families choose Sound for Life when hearing becomes a daily
+                  concern
                 </h2>
                 <div className="section-soft-panel fade-up delay-1">
                   <p className="section-intro">
-                    Hearing care is personal. You need someone who listens first, explains clearly, and stays with you after the first appointment.
+                    Hearing care is personal. You need someone who listens first,
+                    explains clearly, and stays with you after the first
+                    appointment.
                   </p>
                 </div>
               </div>
@@ -2045,7 +2285,12 @@ body > header.sfl-header-wrap {
             </div>
 
             <div className="family-visual fade-up delay-2">
-              Indian family of 3 generations — senior man being fitted with hearing aid by Indian audiologist, family smiling, warm indoor light
+              <Image
+                src="/images/home-hearing-family.jpeg"
+                alt="Indian family with senior man receiving hearing care support"
+                fill
+              />
+              <div className="family-visual-overlay" />
             </div>
           </div>
         </section>
@@ -2055,18 +2300,25 @@ body > header.sfl-header-wrap {
           <div className="container">
             <div className="section-header-shell fade-up">
               <h2 className="section-title">
-                Stories that show how Sound for Life is growing hearing care differently
+                Stories that show how Sound for Life is growing hearing care
+                differently
               </h2>
               <div className="section-soft-panel fade-up delay-1">
                 <p className="section-intro">
-                  Behind every clinic, appointment, and hearing test is a larger story — a growing hearing care network, trained professionals, and local clinics becoming trusted points of support for families.
+                  Behind every clinic, appointment, and hearing test is a larger
+                  story — a growing hearing care network, trained professionals,
+                  and local clinics becoming trusted points of support for
+                  families.
                 </p>
               </div>
             </div>
 
             <div className="stories-grid premium-grid-glow">
               {stories.map((story, index) => (
-                <article className={`story-card fade-up delay-${index}`} key={story.title}>
+                <article
+                  className={`story-card fade-up delay-${index}`}
+                  key={story.title}
+                >
                   <div className="story-label">{story.label}</div>
                   <h3>{story.title}</h3>
                   <p>{story.copy}</p>
@@ -2083,7 +2335,10 @@ body > header.sfl-header-wrap {
 
             <div className="blogs-grid premium-grid-glow">
               {blogs.map((blog, index) => (
-                <article className={`blog-card fade-up delay-${index + 1}`} key={blog.title}>
+                <article
+                  className={`blog-card fade-up delay-${index + 1}`}
+                  key={blog.title}
+                >
                   <div className="blog-label">{blog.label}</div>
                   <h3>{blog.title}</h3>
                   <p>{blog.copy}</p>
@@ -2095,12 +2350,24 @@ body > header.sfl-header-wrap {
             </div>
 
             <div className="education-tags fade-up delay-2">
-              <a className="education-tag" href="/stories">PR</a>
-              <a className="education-tag" href="/faqs">FAQs</a>
-              <a className="education-tag" href="/stories">Events</a>
-              <a className="education-tag" href="/testimonials">Testimonials</a>
-              <a className="education-tag" href="/blogs">Blogs</a>
-              <a className="education-tag" href="/stories">Stories</a>
+              <a className="education-tag" href="/stories">
+                PR
+              </a>
+              <a className="education-tag" href="/faqs">
+                FAQs
+              </a>
+              <a className="education-tag" href="/stories">
+                Events
+              </a>
+              <a className="education-tag" href="/testimonials">
+                Testimonials
+              </a>
+              <a className="education-tag" href="/blogs">
+                Blogs
+              </a>
+              <a className="education-tag" href="/stories">
+                Stories
+              </a>
             </div>
           </div>
         </section>
@@ -2108,7 +2375,11 @@ body > header.sfl-header-wrap {
         <ReviewsSection />
         <FAQSection faqs={faqs} openFaq={openFaq} setOpenFaq={setOpenFaq} />
 
-        <div className={`toast ${toastVisible ? "toast-visible" : "toast-hidden"}`}>
+        <div
+          className={`toast ${
+            toastVisible ? "toast-visible" : "toast-hidden"
+          }`}
+        >
           <div className="toast-row">
             <div>
               <div className="toast-label">Recent activity</div>
@@ -2125,17 +2396,40 @@ body > header.sfl-header-wrap {
           </div>
         </div>
 
-        <div className={`sticky-cta ${showStickyCta ? "sticky-cta-visible" : "sticky-cta-hidden"}`}>
+        <div
+          className={`sticky-cta ${
+            showStickyCta ? "sticky-cta-visible" : "sticky-cta-hidden"
+          }`}
+        >
           <div className="sticky-cta-inner">
-            <a className="btn btn-primary" href="/book-hearing-test">
+            <a
+              className="btn btn-primary"
+              href={buildCtaHref({
+                intent: "hearing-test",
+                sourcePage: "homepage",
+                cta: "sticky-book-hearing-test",
+                referrerSection: "sticky-cta",
+              })}
+            >
               Book Hearing Test
             </a>
-            <a className="btn btn-secondary" href="tel:+919015401540">
+            <a
+              className="btn btn-secondary"
+              href={buildCtaHref({
+                intent: "clinic-visit",
+                sourcePage: "homepage",
+                cta: "sticky-call-clinic",
+                referrerSection: "sticky-cta",
+              })}
+            >
               Call Clinic
             </a>
           </div>
         </div>
+
+      
       </main>
     </>
   );
 }
+

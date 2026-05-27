@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useMemo, useState } from "react";
+import { buildCtaHref } from "@/lib/cta";
 
 type NavLink = {
   label: string;
@@ -52,7 +54,15 @@ const navItems: NavItem[] = [
           { label: "Should I Visit an Audiologist?", href: "/hearing-loss/visit-audiologist" },
           { label: "Is It Hearing Loss or Ear Blockage?", href: "/hearing-loss/hearing-loss-or-ear-blockage" },
           { label: "Take an Online Hearing Check", href: "/hearing-loss/online-hearing-check" },
-          { label: "Book a Free Hearing Test", href: "/book-free-hearing-test" },
+          {
+            label: "Book a Free Hearing Test",
+            href: buildCtaHref({
+              intent: "hearing-test",
+              sourcePage: "header",
+              cta: "Book a Free Hearing Test",
+              referrerSection: "hearing-loss-menu",
+            }),
+          },
         ],
       },
     ],
@@ -140,8 +150,24 @@ const navItems: NavItem[] = [
         heading: "Find a Clinic",
         links: [
           { label: "View All Locations", href: "/clinics" },
-          { label: "Book Free Hearing Test", href: "/book-free-hearing-test" },
-          { label: "Call Clinic", href: "tel:+919015401540" },
+          {
+            label: "Book Free Hearing Test",
+            href: buildCtaHref({
+              intent: "hearing-test",
+              sourcePage: "header",
+              cta: "Book Free Hearing Test",
+              referrerSection: "clinics-menu",
+            }),
+          },
+          {
+            label: "Call Clinic",
+            href: buildCtaHref({
+              intent: "audiologist",
+              sourcePage: "header",
+              cta: "Call Clinic",
+              referrerSection: "clinics-menu",
+            }),
+          },
         ],
       },
       {
@@ -210,6 +236,38 @@ const navItems: NavItem[] = [
   },
 ];
 
+function isExternalHref(href: string) {
+  return href.startsWith("tel:") || href.startsWith("http://") || href.startsWith("https://");
+}
+
+function NavLinkItem({
+  href,
+  children,
+  onClick,
+  className,
+  ariaLabel,
+}: {
+  href: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  ariaLabel?: string;
+}) {
+  if (isExternalHref(href)) {
+    return (
+      <a href={href} onClick={onClick} className={className} aria-label={ariaLabel}>
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} onClick={onClick} className={className} aria-label={ariaLabel}>
+      {children}
+    </Link>
+  );
+}
+
 export default function MainHeader() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
@@ -247,7 +305,7 @@ export default function MainHeader() {
     <>
       <header className="header">
         <div className="container header-inner">
-          <a className="logo-link" href="/" aria-label="Sound for Life home">
+          <NavLinkItem className="logo-link" href="/" ariaLabel="Sound for Life home">
             <Image
               src="/logo.png"
               alt="Sound for Life Hearing Solutions logo"
@@ -256,7 +314,7 @@ export default function MainHeader() {
               className="logo-image"
               priority
             />
-          </a>
+          </NavLinkItem>
 
           <nav className="nav" aria-label="Primary navigation">
             {navItems.map((item) => {
@@ -297,14 +355,12 @@ export default function MainHeader() {
                     </div>
 
                     <div className="menu-group-links">
-                      <div className="menu-links-title">
-                        {currentGroup?.heading}
-                      </div>
+                      <div className="menu-links-title">{currentGroup?.heading}</div>
                       <div className="menu-links-list">
                         {currentGroup?.links.map((link) => (
-                          <a key={`${link.href}-${link.label}`} href={link.href}>
+                          <NavLinkItem key={`${link.href}-${link.label}`} href={link.href}>
                             {link.label}
-                          </a>
+                          </NavLinkItem>
                         ))}
                       </div>
                     </div>
@@ -315,12 +371,22 @@ export default function MainHeader() {
           </nav>
 
           <div className="header-actions">
-            <a className="icon-btn search-desktop" href="/blogs" aria-label="Search">
+            <NavLinkItem className="icon-btn search-desktop" href="/blogs" ariaLabel="Search">
               🔍
-            </a>
-            <a className="btn btn-primary cta-desktop" href="/book-free-hearing-test">
+            </NavLinkItem>
+
+            <NavLinkItem
+              className="btn btn-primary cta-desktop"
+              href={buildCtaHref({
+                intent: "hearing-test",
+                sourcePage: "header",
+                cta: "Book My Free Hearing Test",
+                referrerSection: "desktop-header",
+              })}
+            >
               Book My Free Hearing Test
-            </a>
+            </NavLinkItem>
+
             <button
               type="button"
               className="icon-btn mobile-toggle"
@@ -339,7 +405,7 @@ export default function MainHeader() {
       >
         <div className="mobile-panel" onClick={(e) => e.stopPropagation()}>
           <div className="mobile-header">
-            <a className="logo-link" href="/" aria-label="Sound for Life home">
+            <NavLinkItem className="logo-link" href="/" ariaLabel="Sound for Life home">
               <Image
                 src="/logo.png"
                 alt="Sound for Life Hearing Solutions logo"
@@ -347,7 +413,8 @@ export default function MainHeader() {
                 height={90}
                 className="logo-image"
               />
-            </a>
+            </NavLinkItem>
+
             <button
               type="button"
               className="icon-btn"
@@ -382,13 +449,13 @@ export default function MainHeader() {
                         <div className="mobile-group-title">{group.heading}</div>
                         <div className="mobile-group-links">
                           {group.links.map((link) => (
-                            <a
+                            <NavLinkItem
                               key={`${link.href}-${link.label}`}
                               href={link.href}
                               onClick={() => setMobileMenuOpen(false)}
                             >
                               {link.label}
-                            </a>
+                            </NavLinkItem>
                           ))}
                         </div>
                       </div>
@@ -400,20 +467,31 @@ export default function MainHeader() {
           </div>
 
           <div className="mobile-cta-row">
-            <a
+            <NavLinkItem
               className="btn btn-primary"
-              href="/book-free-hearing-test"
+              href={buildCtaHref({
+                intent: "hearing-test",
+                sourcePage: "header",
+                cta: "Book My Free Hearing Test",
+                referrerSection: "mobile-header",
+              })}
               onClick={() => setMobileMenuOpen(false)}
             >
               Book My Free Hearing Test
-            </a>
-            <a
+            </NavLinkItem>
+
+            <NavLinkItem
               className="btn btn-secondary"
-              href="/clinics"
+              href={buildCtaHref({
+                intent: "clinic-visit",
+                sourcePage: "header",
+                cta: "Find a Clinic Near You",
+                referrerSection: "mobile-header",
+              })}
               onClick={() => setMobileMenuOpen(false)}
             >
               Find a Clinic Near You
-            </a>
+            </NavLinkItem>
           </div>
         </div>
       </div>

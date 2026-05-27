@@ -2,7 +2,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type NavLink = {
   label: string;
@@ -212,6 +212,13 @@ export default function MainHeader() {
     setOpenMobileGroup((current) => (current === key ? null : key));
   }
 
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   return (
     <>
       <style>{`
@@ -222,7 +229,7 @@ export default function MainHeader() {
           right: 0;
           width: 100%;
           z-index: 1090;
-          background: rgba(255, 255, 255, 0.96);
+          background: rgba(255, 255, 255, 0.98);
           backdrop-filter: blur(18px);
           -webkit-backdrop-filter: blur(18px);
           border-bottom: 1px solid rgba(13, 59, 125, 0.08);
@@ -391,6 +398,7 @@ export default function MainHeader() {
           justify-content: center;
           color: #0d3b7d;
           cursor: pointer;
+          background: transparent;
         }
 
         .sfl-mobile-toggle-lines {
@@ -422,8 +430,10 @@ export default function MainHeader() {
 
         .sfl-mobile-menu {
           display: none;
-          padding: 0 0 18px;
-          border-top: 1px solid rgba(13, 59, 125, 0.06);
+        }
+
+        .sfl-mobile-menu-open {
+          display: none;
         }
 
         .sfl-mobile-menu-inner {
@@ -462,6 +472,7 @@ export default function MainHeader() {
           color: #15365d;
           font-size: 14px;
           cursor: pointer;
+          background: transparent;
         }
 
         .sfl-mobile-section-body {
@@ -486,6 +497,7 @@ export default function MainHeader() {
           font-weight: 800;
           text-align: left;
           cursor: pointer;
+          background: transparent;
         }
 
         .sfl-mobile-group-links {
@@ -550,23 +562,48 @@ export default function MainHeader() {
           }
 
           .sfl-header-bar {
+            min-height: 72px;
             grid-template-columns: auto 1fr auto;
             gap: 12px;
-            min-height: 74px;
           }
 
           .sfl-logo-image {
             width: 170px;
+            height: auto;
           }
 
-          .sfl-mobile-menu {
+          .sfl-mobile-menu-open {
             display: block;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.99);
+            border-top: 1px solid rgba(13, 59, 125, 0.06);
+            border-bottom: 1px solid rgba(13, 59, 125, 0.08);
+            box-shadow: 0 18px 40px rgba(13, 59, 125, 0.10);
+            max-height: calc(100vh - 124px);
+            overflow-y: auto;
+            padding: 0 16px 18px;
           }
         }
 
         @media (max-width: 520px) {
+          .sfl-header-wrap {
+            top: 52px;
+          }
+
+          .sfl-header-bar {
+            min-height: 68px;
+          }
+
           .sfl-logo-image {
             width: 150px;
+            height: auto;
+          }
+
+          .sfl-mobile-menu-open {
+            max-height: calc(100vh - 120px);
           }
         }
       `}</style>
@@ -601,7 +638,9 @@ export default function MainHeader() {
                       href={item.href}
                     >
                       {item.title}
-                      {item.groups.length > 0 ? <span className="sfl-nav-caret">▾</span> : null}
+                      {item.groups.length > 0 ? (
+                        <span className="sfl-nav-caret">▾</span>
+                      ) : null}
                     </a>
 
                     {isOpen && item.groups.length > 0 ? (
@@ -631,7 +670,11 @@ export default function MainHeader() {
                                   <div className="sfl-level-2">
                                     <div className="sfl-level-2-list">
                                       {group.links.map((link) => (
-                                        <a key={link.label} className="sfl-level-2-link" href={link.href}>
+                                        <a
+                                          key={link.label}
+                                          className="sfl-level-2-link"
+                                          href={link.href}
+                                        >
                                           {link.label}
                                         </a>
                                       ))}
@@ -664,86 +707,84 @@ export default function MainHeader() {
             </button>
           </div>
 
-          {mobileMenuOpen ? (
-            <div className="sfl-mobile-menu">
-              <div className="sfl-mobile-menu-inner">
-                {navItems.map((item) => {
-                  const sectionOpen = openMobileSection === item.title;
+          <div className={mobileMenuOpen ? "sfl-mobile-menu-open" : "sfl-mobile-menu"}>
+            <div className="sfl-mobile-menu-inner">
+              {navItems.map((item) => {
+                const sectionOpen = openMobileSection === item.title;
 
-                  return (
-                    <div key={item.title} className="sfl-mobile-section">
-                      <div className="sfl-mobile-section-head">
-                        <a
-                          className="sfl-mobile-section-link"
-                          href={item.href}
-                          onClick={() => setMobileMenuOpen(false)}
+                return (
+                  <div key={item.title} className="sfl-mobile-section">
+                    <div className="sfl-mobile-section-head">
+                      <a
+                        className="sfl-mobile-section-link"
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {item.title}
+                      </a>
+
+                      {item.groups.length > 0 ? (
+                        <button
+                          type="button"
+                          className="sfl-mobile-section-toggle"
+                          aria-expanded={sectionOpen}
+                          onClick={() => toggleMobileSection(item.title)}
                         >
-                          {item.title}
-                        </a>
-
-                        {item.groups.length > 0 ? (
-                          <button
-                            type="button"
-                            className="sfl-mobile-section-toggle"
-                            aria-expanded={sectionOpen}
-                            onClick={() => toggleMobileSection(item.title)}
-                          >
-                            {sectionOpen ? "−" : "+"}
-                          </button>
-                        ) : null}
-                      </div>
-
-                      {sectionOpen ? (
-                        <div className="sfl-mobile-section-body">
-                          {item.groups.map((group) => {
-                            const groupKey = `${item.title}::${group.heading}`;
-                            const groupOpen = openMobileGroup === groupKey;
-
-                            return (
-                              <div key={group.heading} className="sfl-mobile-group">
-                                <button
-                                  type="button"
-                                  className="sfl-mobile-group-toggle"
-                                  aria-expanded={groupOpen}
-                                  onClick={() => toggleMobileGroup(item.title, group.heading)}
-                                >
-                                  <span>{group.heading}</span>
-                                  <span>{groupOpen ? "−" : "+"}</span>
-                                </button>
-
-                                {groupOpen ? (
-                                  <div className="sfl-mobile-group-links">
-                                    {group.links.map((link) => (
-                                      <a
-                                        key={link.label}
-                                        className="sfl-mobile-link"
-                                        href={link.href}
-                                        onClick={() => setMobileMenuOpen(false)}
-                                      >
-                                        {link.label}
-                                      </a>
-                                    ))}
-                                  </div>
-                                ) : null}
-                              </div>
-                            );
-                          })}
-                        </div>
+                          {sectionOpen ? "−" : "+"}
+                        </button>
                       ) : null}
                     </div>
-                  );
-                })}
 
-                <a
-                  className="sfl-mobile-cta"
-                  href="/book-hearing-test"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Book My Hearing Test
-                </a>
-              </div>
+                    {sectionOpen ? (
+                      <div className="sfl-mobile-section-body">
+                        {item.groups.map((group) => {
+                          const groupKey = `${item.title}::${group.heading}`;
+                          const groupOpen = openMobileGroup === groupKey;
+
+                          return (
+                            <div key={group.heading} className="sfl-mobile-group">
+                              <button
+                                type="button"
+                                className="sfl-mobile-group-toggle"
+                                aria-expanded={groupOpen}
+                                onClick={() => toggleMobileGroup(item.title, group.heading)}
+                              >
+                                <span>{group.heading}</span>
+                                <span>{groupOpen ? "−" : "+"}</span>
+                              </button>
+
+                              {groupOpen ? (
+                                <div className="sfl-mobile-group-links">
+                                  {group.links.map((link) => (
+                                    <a
+                                      key={link.label}
+                                      className="sfl-mobile-link"
+                                      href={link.href}
+                                      onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                      {link.label}
+                                    </a>
+                                  ))}
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+
+              <a
+                className="sfl-mobile-cta"
+                href="/book-hearing-test"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Book My Hearing Test
+              </a>
             </div>
-          ) : null}
+          </div>
         </div>
       </header>
     </>

@@ -39,8 +39,8 @@ export default function SiteWidePopup() {
 
       hideTimeout = setTimeout(() => {
         setVisible(false);
-      }, 2000);
-    }, 3000);
+      }, 2500);
+    }, 5000);
 
     return () => {
       window.clearInterval(interval);

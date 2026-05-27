@@ -1,4 +1,11 @@
+// FILE: components/home/sections/ClinicsSection.tsx
+"use client";
+
+import Link from "next/link";
+import { buildCtaHref } from "@/lib/cta";
+
 type Clinic = {
+  slug: string;
   city: string;
   locality: string;
   address: string;
@@ -42,13 +49,9 @@ export default function ClinicsSection({
             <span className="section-chip">Multiple cities</span>
           </div>
 
-          <a className="btn btn-secondary" href="/clinics">
-            View All Clinics
-          </a>
-        </div>
-
-        <div className="search-wrap fade-up delay-2">
-          <input placeholder="Search by City" aria-label="Search by city" />
+          <Link className="btn btn-secondary" href="/clinics">
+            Book Clinic Visit
+          </Link>
         </div>
 
         <div className="city-pills fade-up delay-2">
@@ -67,8 +70,8 @@ export default function ClinicsSection({
         <div className="clinics-grid premium-grid-glow">
           {clinics.map((clinic, index) => (
             <article
+              key={clinic.slug}
               className={`clinic-card fade-up delay-${index % 3}`}
-              key={`${clinic.city}-${clinic.locality}`}
             >
               <div className="clinic-meta">
                 <div className="clinic-city">{clinic.city}</div>
@@ -82,12 +85,24 @@ export default function ClinicsSection({
                 </div>
 
                 <div className="hero-cta-row" style={{ marginTop: 0 }}>
-                  <a className="btn btn-secondary" href="tel:+919015401540">
+                  <Link
+                    className="btn btn-secondary"
+                    href={buildCtaHref({
+                      intent: "clinic-visit",
+                      sourcePage: "homepage",
+                      cta: `clinic-call-${clinic.slug}`,
+                      referrerSection: "clinics-section",
+                    })}
+                  >
                     Call Clinic
-                  </a>
-                  <a className="btn btn-primary" href="/book-hearing-test">
-                    Book Hearing Test
-                  </a>
+                  </Link>
+
+                  <Link
+                    className="btn btn-primary"
+                    href={`/book-appointment?clinic=${encodeURIComponent(clinic.slug)}`}
+                  >
+                    Book Clinic Visit
+                  </Link>
                 </div>
               </div>
             </article>

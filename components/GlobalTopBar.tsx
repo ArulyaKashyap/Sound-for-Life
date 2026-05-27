@@ -1,5 +1,23 @@
-// components/GlobalTopBar.tsx
+"use client";
+
+import Link from "next/link";
+import { buildCtaHref } from "@/lib/cta";
+
 export default function GlobalTopBar() {
+  const hearingTestHref = buildCtaHref({
+    intent: "hearing-test",
+    sourcePage: "global-topbar",
+    cta: "Book My Hearing Test",
+    referrerSection: "topbar",
+  });
+
+  const audiologistHref = buildCtaHref({
+    intent: "audiologist",
+    sourcePage: "global-topbar",
+    cta: "Call Clinic",
+    referrerSection: "topbar",
+  });
+
   return (
     <>
       <style>{`
@@ -28,6 +46,18 @@ export default function GlobalTopBar() {
           font-size: 12px;
         }
 
+        .sfl-global-topbar-help {
+          color: #ffffff;
+          text-decoration: none;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+
+        .sfl-global-topbar-help:hover {
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+
         .sfl-global-topbar-cta {
           padding: 9px 14px;
           border-radius: 999px;
@@ -37,6 +67,7 @@ export default function GlobalTopBar() {
           box-shadow: 0 12px 24px rgba(244,131,31,0.22);
           transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
           white-space: nowrap;
+          text-decoration: none;
         }
 
         .sfl-global-topbar-cta:hover {
@@ -56,10 +87,14 @@ export default function GlobalTopBar() {
       <div className="sfl-global-topbar">
         <div className="sfl-global-topbar-inner">
           <div>Choose Your Nearest Clinic</div>
-          <div>Need help deciding? Call +919015401540 · Mon–Sat 10am–7pm</div>
-          <a className="sfl-global-topbar-cta" href="/book-hearing-test">
+
+          <Link className="sfl-global-topbar-help" href={audiologistHref}>
+            Need help deciding? Call +919015401540 · Mon–Sat 10am–7pm
+          </Link>
+
+          <Link className="sfl-global-topbar-cta" href={hearingTestHref}>
             Book My Hearing Test →
-          </a>
+          </Link>
         </div>
       </div>
     </>
